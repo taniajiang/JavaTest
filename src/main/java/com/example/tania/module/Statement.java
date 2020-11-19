@@ -51,6 +51,7 @@ public class Statement {
     }
 
     public String getAccountNumber() {
+        // The account number should be hashed before sent to the user.
         if(StringUtils.isNotBlank(accountNumber)){
             return String.valueOf(accountNumber.hashCode());
         }

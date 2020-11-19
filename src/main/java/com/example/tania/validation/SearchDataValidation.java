@@ -52,7 +52,7 @@ public class SearchDataValidation implements Validator {
             try {
                 Date from = simpleDateFormat.parse(fromDate);
                 Date to = simpleDateFormat.parse(toDate);
-                if (from.compareTo(to) <= 0) {
+                if (from.compareTo(to) >= 0) {
                     errors.rejectValue("fromDate", "From date can not after to date");
                 }
             } catch (ParseException e) {
@@ -62,13 +62,13 @@ public class SearchDataValidation implements Validator {
 
         // Amount validation
         if (StringUtils.isNotBlank(inputAmount)) {
-            checkAmount(inputAmount, errors, "inputAmount", "Input amount is not currect");
+            checkAmount(inputAmount, errors, "inputAmount", "Input amount is not currect, shoule be XXX.XX");
         }
         if (StringUtils.isNotBlank(fromAmount)) {
-            checkAmount(fromAmount, errors, "fromAmount", "From amount is not currect");
+            checkAmount(fromAmount, errors, "fromAmount", "From amount is not currect, shoule be XXX.XX");
         }
         if (StringUtils.isNotBlank(toAmount)) {
-            checkAmount(toAmount, errors, "toAmount", "To amount is not currect");
+            checkAmount(toAmount, errors, "toAmount", "To amount is not currect, shoule be XXX.XX");
         }
         if(StringUtils.isNotBlank(fromAmount) && StringUtils.isNotBlank(toAmount)){
             BigDecimal from_Amount = StringUtils.isNotBlank(searchData.getFromAmount())? new BigDecimal(searchData.getFromAmount()) : null;
