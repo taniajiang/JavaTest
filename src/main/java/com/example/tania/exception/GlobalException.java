@@ -10,6 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 public class GlobalException {
     public static final String DEFAULT_ERROR_VIEW = "error";
 
+    /**
+     * Add global exception to handler exception
+     *
+     * @param req
+     * @param e
+     * @return
+     * @throws Exception
+     */
     @ExceptionHandler(value = Exception.class)
     public ModelAndView defaultErrorHandler(HttpServletRequest req, Exception e) throws Exception{
         ModelAndView mav = new ModelAndView();

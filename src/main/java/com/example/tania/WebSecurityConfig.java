@@ -13,6 +13,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @EnableWebSecurity 
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter
 {
+	/**
+	 * Create two user in memory to auth.
+	 *
+	 * @param auth
+	 * @throws Exception
+	 */
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		auth.inMemoryAuthentication().passwordEncoder(new BCryptPasswordEncoder())
@@ -22,6 +28,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
 				.password(new BCryptPasswordEncoder().encode("userpassword")).roles("USER");
 	}
 
+	/**
+	 * Config login check request and success forward request.
+	 *
+	 * @param http
+	 * @throws Exception
+	 */
 	@Override
 	protected void configure(HttpSecurity http) throws Exception{
 		http.formLogin()
@@ -29,7 +41,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
 				.successForwardUrl("/search")
 				.and()
 				.authorizeRequests()
-
 				.antMatchers("/login.html", "/login",
 						"/logout", "/").permitAll()
 				.anyRequest()

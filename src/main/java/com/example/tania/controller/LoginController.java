@@ -2,25 +2,20 @@ package com.example.tania.controller;
 
 import com.example.tania.module.SearchData;
 import com.example.tania.module.Statement;
-import com.example.tania.module.User;
 import com.example.tania.service.StatementService;
 import com.example.tania.validation.SearchDataValidation;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.ModelAndView;
-import org.thymeleaf.util.ListUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -51,51 +46,33 @@ public class LoginController {
         return mav;
     }
 
-   /* @RequestMapping(value = "/dologin", method = RequestMethod.POST)
-    public ModelAndView doLogin(User user, ModelAndView mv, HttpServletRequest request, Model model){
-        if (user!=null){
-            String userName = user.getUsername();
-            if("testadmin".equals(user.getUsername())){
-                request.getSession().setAttribute("login",userName);
-                request.getSession().setAttribute("login_role","admin");
-            }else if ("testUser".equals(user.getUsername())){
-                request.getSession().setAttribute("login",userName);
-                request.getSession().setAttribute("login_role","test");
-            }
-            model.addAttribute("loginName", userName);
-            List<Statement> statements = statementService.getAllStatement();
-            model.addAttribute("statements", statements);
-            mv.setViewName("main");
-        }else{
-            model.addAttribute("errorMessage", "Invalid username or password.");
-            mv.setViewName("login");
-        }
-
-        return mv;
-    }*/
-
     @RequestMapping(value = "/search")
-    public ModelAndView search(SearchData searchData, final Model model, BindingResult bindingResult){
+    public ModelAndView search(SearchData searchData, final Model model, BindingResult bindingResult) {
         ModelAndView mav = new ModelAndView();
         buildAttribute(searchData, model);
 
         List<Statement> statements = new ArrayList<>();
         if (searchData != null && StringUtils.isNotBlank(searchData.getAccountId())) {
-            try{
+            // Validate Role_user user cannot do detailed(Date and Amount) search.
+            try {
                 validRoleAuth(searchData);
-            }catch (HttpClientErrorException e){
+            } catch (HttpClientErrorException e) {
                 model.addAttribute("errorMessage", e.getMessage());
                 return getModelAndView(model, mav, statements);
             }
 
+            // Validate form data, and display the first error in the FE.
             searchDataValidation.validate(searchData, bindingResult);
             if (bindingResult.hasErrors()) {
                 List<ObjectError> errors = bindingResult.getAllErrors();
                 model.addAttribute("errorMessage", errors.get(0).getCode());
                 return getModelAndView(model, mav, statements);
             }
+
+            //If Validate success, will do detailed search
             statements = statementService.getStatementsById(searchData);
-        }else{
+        } else {
+            // By deafult is will list all date from per three month
             statements = statementService.getAllStatement();
         }
         model.addAttribute("statements", statements);
@@ -103,20 +80,42 @@ public class LoginController {
         return mav;
     }
 
+    /**
+     * Common use for main page module and view.
+     *
+     * @param model
+     * @param mav
+     * @param statements
+     * @return
+     */
     private ModelAndView getModelAndView(Model model, ModelAndView mav, List<Statement> statements) {
         model.addAttribute("statements", statements);
         mav.setViewName("main");
         return mav;
     }
 
-    private void validRoleAuth(SearchData searchData)  throws HttpClientErrorException {
+    /**
+     * The ‘testUser’ can only do a request without parameters which will return the three
+     * months back statement.
+     *
+     * @param searchData
+     * @throws HttpClientErrorException
+     */
+    private void validRoleAuth(SearchData searchData) throws HttpClientErrorException {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String userRole = userDetails.getAuthorities().iterator().next().toString();
-        if (StringUtils.isNotBlank(userRole) && !ADMIN_ROLE.equals(userRole) && hasOtherCondition(searchData)){
+        if (StringUtils.isNotBlank(userRole) && !ADMIN_ROLE.equals(userRole) && hasOtherCondition(searchData)) {
+            // When the test user tries to specify any parameter, then HTTP unauthorized access error will be sent.
             throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Current user don't have access for detailed (Date and Amount) search.");
         }
     }
 
+    /**
+     * Build other attribute for module using in page.
+     *
+     * @param searchData
+     * @param model
+     */
     private void buildAttribute(SearchData searchData, Model model) {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         model.addAttribute("loginName", userDetails.getUsername());
@@ -129,7 +128,13 @@ public class LoginController {
         model.addAttribute("toAmount", searchData.getToAmount());
     }
 
-    private boolean hasOtherCondition(final SearchData searchData){
+    /**
+     * Check if it do detailed search.
+     *
+     * @param searchData
+     * @return
+     */
+    private boolean hasOtherCondition(final SearchData searchData) {
         String selectDate = searchData.getSelectDate();
         String fromDate = searchData.getFromDate();
         String toDate = searchData.getToDate();
@@ -139,7 +144,7 @@ public class LoginController {
 
         return StringUtils.isNotBlank(selectDate) || StringUtils.isNotBlank(fromDate)
                 || StringUtils.isNotBlank(toDate) || StringUtils.isNotBlank(inputAmount)
-                || StringUtils.isNotBlank(fromAmount) || StringUtils.isNotBlank(toAmount) ;
+                || StringUtils.isNotBlank(fromAmount) || StringUtils.isNotBlank(toAmount);
     }
 
 }

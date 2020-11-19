@@ -39,12 +39,15 @@ public class SearchDataValidation implements Validator {
         String fromAmount = searchData.getFromAmount();
         String toAmount = searchData.getToAmount();
 
+        //Account ID should not be empty, and need match format and exist in DB
         if (StringUtils.isBlank(accountId)) {
             errors.rejectValue("accountId", "Account ID is required");
         }
         if (StringUtils.isNotBlank(accountId) && (!validAccountId(accountId) || null == accountService.getAccountById(accountId))) {
             errors.rejectValue("accountId", "Account ID is not correct");
         }
+
+        // Date validation
         if (StringUtils.isNotBlank(fromDate) && StringUtils.isNotBlank(toDate)) {
             try {
                 Date from = simpleDateFormat.parse(fromDate);
@@ -56,6 +59,8 @@ public class SearchDataValidation implements Validator {
                 errors.rejectValue("fromDate", "Date format is not currect");
             }
         }
+
+        // Amount validation
         if (StringUtils.isNotBlank(inputAmount)) {
             checkAmount(inputAmount, errors, "inputAmount", "Input amount is not currect");
         }
@@ -74,6 +79,12 @@ public class SearchDataValidation implements Validator {
         }
     }
 
+    /**
+     * Check account ID format (/^[1-9]+[0-9]*$/)
+     *
+     * @param accountId
+     * @return boolean
+     */
     private boolean validAccountId(String accountId) {
         Matcher match = accountIdPattern.matcher(accountId);
         if (match.matches() == false) {
@@ -82,6 +93,14 @@ public class SearchDataValidation implements Validator {
         return true;
     }
 
+    /**
+     * Check amount format (/^(([1-9]{1}\d*)|([0]{1}))(\.(\d){0,2})?$/)
+     *
+     * @param fromAmount
+     * @param errors
+     * @param fromAmount2
+     * @param msg
+     */
     private void checkAmount(String fromAmount, Errors errors, String fromAmount2, String msg) {
         Matcher match = pattern.matcher(fromAmount);
         if (match.matches() == false) {

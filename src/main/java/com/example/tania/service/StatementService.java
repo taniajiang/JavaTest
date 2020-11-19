@@ -8,7 +8,18 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface StatementService {
+    /**
+     * Get all statement
+     *
+     * @return List<Statement>
+     */
     public List<Statement> getAllStatement();
 
+    /**
+     * Get statement By ID
+     *
+     * @param searchData
+     * @return
+     */
     public List<Statement> getStatementsById(SearchData searchData);
 }
